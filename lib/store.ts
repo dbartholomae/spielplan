@@ -1,5 +1,7 @@
 // Simple in-memory store for event series and votes.
-// Note: This is ephemeral. In production, replace with a real database (e.g., Supabase tables).
+// Note: This is ephemeral. In production, we can use Supabase tables via SupabaseStore below.
+
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 export type BggGame = {
   id: string; // BGG ID as string
@@ -88,4 +90,147 @@ export class InMemoryStore {
   }
 }
 
-export const store = new InMemoryStore();
+export class SupabaseStore {
+  private client: SupabaseClient;
+
+  constructor(client: SupabaseClient) {
+    this.client = client;
+  }
+
+  private isMissingTableError(err: any): boolean {
+    const code = err?.code || err?.details?.code;
+    const msg = String(err?.message || '').toLowerCase();
+    return code === 'PGRST205' || code === '42P01' || msg.includes('could not find the table') || (msg.includes('relation') && msg.includes('does not exist'));
+  }
+
+  private throwSchemaError(context: string, err: any): never {
+    if (this.isMissingTableError(err)) {
+      throw new Error(`[SupabaseStore] Missing required tables. Please run: pnpm setup:supabase (context: ${context})`);
+    }
+    throw new Error(`[SupabaseStore] ${context} failed: ${err?.message || String(err)}`);
+  }
+
+  private mapSeriesRow(row: any): EventSeries {
+    return {
+      id: row.id,
+      slug: row.slug,
+      title: row.title ?? undefined,
+      ownerId: row.owner_id ?? undefined,
+      createdAt: row.created_at,
+      games: row.games ?? [],
+      timeslots: row.timeslots ?? [],
+    } as EventSeries;
+  }
+
+  async createSeries(input: Omit<EventSeries, 'id' | 'slug' | 'createdAt'>): Promise<EventSeries> {
+    // Ensure unique slug (best-effort)
+    let slug = makeId(6);
+    for (let i = 0; i < 5; i++) {
+      const { data: existing, error: checkErr } = await this.client
+        .from('series')
+        .select('slug')
+        .eq('slug', slug)
+        .limit(1);
+      if (checkErr) break; // tolerate check errors; proceed to attempt insert
+      if (!existing || existing.length === 0) break;
+      slug = makeId(6);
+    }
+    const series: EventSeries = {
+      ...(input as any),
+      id: crypto.randomUUID(),
+      slug,
+      createdAt: new Date().toISOString(),
+    };
+    const { error } = await this.client.from('series').insert({
+      id: series.id,
+      slug: series.slug,
+      title: series.title ?? null,
+      owner_id: series.ownerId ?? null,
+      created_at: series.createdAt,
+      games: series.games,
+      timeslots: series.timeslots,
+    });
+    if (error) {
+      this.throwSchemaError('createSeries', error);
+    }
+    return series;
+  }
+
+  async listSeriesByOwner(ownerId: string): Promise<EventSeries[]> {
+    const { data, error } = await this.client
+      .from('series')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      this.throwSchemaError('listSeriesByOwner', error);
+    }
+    return (data ?? []).map((row: any) => this.mapSeriesRow(row));
+  }
+
+  async getSeries(slug: string): Promise<EventSeries | undefined> {
+    const { data, error } = await this.client
+      .from('series')
+      .select('*')
+      .eq('slug', slug)
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      this.throwSchemaError('getSeries', error);
+    }
+    if (!data) return undefined;
+    return this.mapSeriesRow(data);
+  }
+
+  async addVote(vote: Omit<Vote, 'id' | 'createdAt'>): Promise<Vote> {
+    const v: Vote = { ...vote, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    const { error: upErr } = await this.client.from('votes').upsert({
+      id: v.id,
+      series_id: v.seriesId,
+      voter_name: v.voterName ?? null,
+      voter_key: v.voterKey,
+      selected_game_ids: v.selectedGameIds,
+      selected_timeslot_ids: v.selectedTimeslotIds,
+      created_at: v.createdAt,
+    }, { onConflict: 'series_id,voter_key' });
+    if (upErr) {
+      this.throwSchemaError('addVote', upErr);
+    }
+    return v;
+  }
+
+  async listVotes(seriesId: string): Promise<Vote[]> {
+    const { data, error } = await this.client
+      .from('votes')
+      .select('id, series_id, voter_name, voter_key, selected_game_ids, selected_timeslot_ids, created_at')
+      .eq('series_id', seriesId);
+    if (error) {
+      this.throwSchemaError('listVotes', error);
+    }
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      seriesId: row.series_id,
+      voterName: row.voter_name ?? undefined,
+      voterKey: row.voter_key,
+      selectedGameIds: row.selected_game_ids ?? [],
+      selectedTimeslotIds: row.selected_timeslot_ids ?? [],
+      createdAt: row.created_at,
+    } as Vote));
+  }
+}
+
+// Choose store implementation based on environment
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+let storeImpl: InMemoryStore | SupabaseStore;
+if (supabaseUrl && supabaseKey) {
+  const client = createClient(supabaseUrl, supabaseKey);
+  storeImpl = new SupabaseStore(client);
+  console.log('[Store] Using SupabaseStore');
+} else {
+  storeImpl = new InMemoryStore();
+  console.warn('[Store] Using InMemoryStore (no Supabase env vars set)');
+}
+
+export const store = storeImpl;

@@ -31,7 +31,25 @@ A playful Doodle‑like scheduler to find days and times to play board games. Cr
    - Share that link with friends so they can submit availability.
 
 ## Data Storage
-This starter uses an in‑memory store (see `lib/store.ts`). Data resets on server restart and is not shared across instances. For production, replace with a real database (e.g., Supabase tables) in the API route handlers under `app/api/series/*`.
+This starter uses an in‑memory store (see `lib/store.ts`). Data resets on server restart and is not shared across instances.
+
+If you set Supabase environment variables, the app will use Supabase. You must provision the tables first (no automatic fallback). Run the setup script:
+
+1. Create `.env.local` with:
+
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+   And set a Postgres connection string (from Supabase project -> Settings -> Database -> Connection string):
+
+   SUPABASE_DB_URL=postgres://USER:PASSWORD@HOST:PORT/dbname
+
+2. Install deps and run setup:
+
+   pnpm install
+   pnpm setup:supabase
+
+After this, restart the dev server and the API will read/write to Supabase.
 
 ## API Endpoints
 - `GET /api/bgg-search?q=term` – Proxy to BGG XML API2 returning `{ items: [{ id, name, thumbnail }] }`.
