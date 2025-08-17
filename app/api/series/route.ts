@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
-import { createSeries, listSeriesByOwner, EventSeries } from 'lib/store';
+import { store, type EventSeries } from 'lib/store';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const ownerId = searchParams.get('ownerId') ?? '';
   if (!ownerId) return new Response(JSON.stringify({ items: [] }), { headers: { 'content-type': 'application/json' } });
-  const items = listSeriesByOwner(ownerId);
+  const items = await store.listSeriesByOwner(ownerId);
   return new Response(JSON.stringify({ items }), { headers: { 'content-type': 'application/json' } });
 }
 
@@ -18,6 +18,6 @@ export async function POST(req: NextRequest) {
   if (!timeslots || !Array.isArray(timeslots) || timeslots.length === 0) {
     return new Response(JSON.stringify({ error: 'At least one timeslot is required' }), { status: 400 });
   }
-  const series = createSeries({ ownerId, title, games, timeslots });
+  const series = await store.createSeries({ ownerId, title, games, timeslots });
   return new Response(JSON.stringify(series), { headers: { 'content-type': 'application/json' }, status: 201 });
 }
