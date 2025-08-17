@@ -1,0 +1,20 @@
+export const metadata = {
+  title: 'Spielplan',
+  description: 'Hello World Next.js + Supabase on Vercel',
+};
+
+import './globals.css';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+      </body>
+    </html>
+  );
+}
