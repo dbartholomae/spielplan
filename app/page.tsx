@@ -44,10 +44,6 @@ export default function HomePage() {
     })();
   }, [effectiveOwner]);
 
-  async function signInWithGitHub() {
-    if (!supabase) return alert('Supabase not configured. Using guest mode.');
-    await supabase.auth.signInWithOAuth({ provider: 'github' });
-  }
   async function signOut() {
     if (!supabase) return;
     await supabase.auth.signOut();
@@ -58,15 +54,11 @@ export default function HomePage() {
       <div className="hero">
         <div className="container hero-inner">
           <div style={{display:'flex',justifyContent:'flex-end'}}>
-            {supabase ? (
-              userId ? (
+            {userId ? (
                 <button onClick={signOut} className="btn btn-ghost">{t('auth.signOut')}</button>
               ) : (
-                <button onClick={signInWithGitHub} className="btn btn-ghost">{t('auth.signInWithGitHub')}</button>
-              )
-            ) : (
-              <span className="badge">{t('auth.guestMode')}</span>
-            )}
+                <span className="badge">{t('auth.guestMode')}</span>
+              )}
           </div>
           <h1 className="hero-title">{t('app.title')}</h1>
           <p className="hero-sub">{t('app.subtitle')}</p>
