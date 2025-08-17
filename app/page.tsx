@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useI18n } from '../lib/i18n';
 
 export default function HomePage() {
+  const { t } = useI18n();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [series, setSeries] = useState<any[]>([]);
 
@@ -58,35 +60,35 @@ export default function HomePage() {
           <div style={{display:'flex',justifyContent:'flex-end'}}>
             {supabase ? (
               userId ? (
-                <button onClick={signOut} className="btn btn-ghost">Sign out</button>
+                <button onClick={signOut} className="btn btn-ghost">{t('auth.signOut')}</button>
               ) : (
-                <button onClick={signInWithGitHub} className="btn btn-ghost">Sign in with GitHub</button>
+                <button onClick={signInWithGitHub} className="btn btn-ghost">{t('auth.signInWithGitHub')}</button>
               )
             ) : (
-              <span className="badge">Guest mode</span>
+              <span className="badge">{t('auth.guestMode')}</span>
             )}
           </div>
-          <h1 className="hero-title">GameNight Scheduler</h1>
-          <p className="hero-sub">The perfect way to coordinate board game nights with friends. Find the best time and games everyone wants to play!</p>
-          <a className="btn btn-primary" href="/create">Start Planning</a>
+          <h1 className="hero-title">{t('app.title')}</h1>
+          <p className="hero-sub">{t('app.subtitle')}</p>
+          <a className="btn btn-primary" href="/create">{t('app.startPlanning')}</a>
         </div>
       </div>
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title">How It Works</h2>
-          <p className="section-sub">Simple, fun, and designed for board game enthusiasts</p>
+          <h2 className="section-title">{t('home.howItWorks')}</h2>
+          <p className="section-sub">{t('home.simple')}</p>
           <div className="how-cards">
             <div className="card">
-              <div className="card-header">🎯 Pick Games</div>
+              <div className="card-header">{t('home.pickGames')}</div>
               <div className="small">Search BoardGameGeek and add one or more games for your night.</div>
             </div>
             <div className="card">
-              <div className="card-header">🗓️ Set Dates & Times</div>
+              <div className="card-header">{t('home.setDates')}</div>
               <div className="small">Add a few options so everyone can choose what works.</div>
             </div>
             <div className="card">
-              <div className="card-header">📤 Share & Vote</div>
+              <div className="card-header">{t('home.shareVote')}</div>
               <div className="small">Share a public link. Friends can vote without creating an account.</div>
             </div>
           </div>
@@ -95,29 +97,29 @@ export default function HomePage() {
 
       <main className="container grid">
         <div className="flex-between">
-          <h2>Your Event Series</h2>
-          <a href="/create" className="btn btn-primary">New Event Series</a>
+          <h2>{t('series.yourEvents')}</h2>
+          <a href="/create" className="btn btn-primary">{t('series.new')}</a>
         </div>
 
         {series.length === 0 ? (
-          <p className="small">No event series yet. Click "New Event Series" to start.</p>
+          <p className="small">{t('series.none')}</p>
         ) : (
           <ul className="list">
             {series.map((s: any) => (
               <li key={s.id} className="item">
                 <div className="item-head">
                   <div>
-                    <div style={{fontWeight:700}}>{s.title || 'Board game night'}</div>
+                    <div style={{fontWeight:700}}>{s.title || t('public.titleFallback')}</div>
                     <div className="small">{new Date(s.createdAt).toLocaleString()}</div>
                   </div>
-                  <a href={`/s/${s.slug}`} className="btn">Open</a>
+                  <a href={`/s/${s.slug}`} className="btn">{t('series.open')}</a>
                 </div>
                 {s.games?.length ? (
                   <div className="kv">
                     {s.games.slice(0, 5).map((g: any) => (
                       <span key={g.id} className="pill">{g.name}</span>
                     ))}
-                    {s.games.length > 5 && <span className="pill">+{s.games.length - 5} more</span>}
+                    {s.games.length > 5 && <span className="pill">+{s.games.length - 5} {t('series.more')}</span>}
                   </div>
                 ) : null}
               </li>

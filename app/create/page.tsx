@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import GameAutocomplete, { type GameItem } from '../../components/GameAutocomplete';
 import TimeslotPicker, { type Timeslot as TimeslotInput } from '../../components/TimeslotPicker';
 import { supabase } from '../../lib/supabaseClient';
+import { useI18n } from '../../lib/i18n';
 
 function formatIso(iso?: string) {
   if (!iso) return '';
@@ -12,6 +13,7 @@ function formatIso(iso?: string) {
 }
 
 export default function CreateSeriesPage() {
+  const { t } = useI18n();
   const [games, setGames] = useState<GameItem[]>([]);
   const [timeslots, setTimeslots] = useState<TimeslotInput[]>([]);
   const [title, setTitle] = useState('Board game night');
@@ -83,18 +85,18 @@ export default function CreateSeriesPage() {
   return (
     <main className="container grid">
       <div className="flex" style={{gap:8, alignItems:'center'}}>
-        <a href="/" className="btn">← Back to Dashboard</a>
-        <h1 style={{margin:'0 0 0 .5rem'}}>Create New Event Series</h1>
+        <a href="/" className="btn">{t('nav.back')}</a>
+        <h1 style={{margin:'0 0 0 .5rem'}}>{t('create.title')}</h1>
       </div>
 
       <div className="stepper">
         <div className={`step ${step===1?'active':''}`}>
           <div className="dot">1</div>
-          <div className="small">Details</div>
+          <div className="small">{t('create.details')}</div>
         </div>
         <div className={`step ${step===2?'active':''}`}>
           <div className="dot">2</div>
-          <div className="small">Games</div>
+          <div className="small">{t('create.games')}</div>
         </div>
         <div className={`step ${step===3?'active':''}`}>
           <div className="dot">3</div>
