@@ -31,6 +31,7 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
   const [error, setError] = useState<string | null>(null);
 
   const voterKey = useMemo(() => {
+    if (typeof window === 'undefined') return '';
     const key = localStorage.getItem('voterKey') ?? (() => {
       const k = crypto.randomUUID();
       localStorage.setItem('voterKey', k);

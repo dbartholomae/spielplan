@@ -8,6 +8,7 @@ export default function HomePage() {
   const [series, setSeries] = useState<any[]>([]);
 
   const ownerKey = useMemo(() => {
+    if (typeof window === 'undefined') return '';
     const key = localStorage.getItem('ownerKey') ?? (() => {
       const k = crypto.randomUUID();
       localStorage.setItem('ownerKey', k);

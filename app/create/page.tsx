@@ -36,6 +36,7 @@ export default function CreateSeriesPage() {
 
   const ownerKey = useMemo(() => {
     // Guest owner key stored in localStorage. If signed in, we will prefer Supabase user id.
+    if (typeof window === 'undefined') return '';
     const key = localStorage.getItem('ownerKey') ?? (() => {
       const k = crypto.randomUUID();
       localStorage.setItem('ownerKey', k);
