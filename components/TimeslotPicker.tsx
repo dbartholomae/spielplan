@@ -33,6 +33,12 @@ function monthBorder(month: number): string {
   const h = monthHue(month);
   return hsl(h, 70, 35);
 }
+function monthSelectedBackground(month: number, weekend: boolean): string {
+  const h = monthHue(month);
+  // Selected should be noticeably darker than base background
+  const l = weekend ? 62 : 76; // darker than 74/86
+  return hsl(h, 75, l);
+}
 
 export default function TimeslotPicker({ onAdd }: { onAdd: (t: Timeslot) => void }) {
   const [date, setDate] = useState<string>('');
@@ -91,9 +97,11 @@ export default function TimeslotPicker({ onAdd }: { onAdd: (t: Timeslot) => void
           const isPast = ymd < todayYMD; // string compare works for YYYY-MM-DD
           const month = d.getMonth();
           const weekend = d.getDay() === 0 || d.getDay() === 6; // Sun or Sat
-          const bg = monthBackground(month, weekend);
+          const bgBase = monthBackground(month, weekend);
+          const bg = isSel ? monthSelectedBackground(month, weekend) : bgBase;
           const color = '#111';
           const borderColor = isSel ? monthBorder(month) : '#222';
+          const borderWidth = isSel ? 3 : 2;
           const opacity = isPast ? 0.5 : 1;
           const cursor = isPast ? 'not-allowed' as const : 'pointer' as const;
           return (
@@ -102,21 +110,27 @@ export default function TimeslotPicker({ onAdd }: { onAdd: (t: Timeslot) => void
               type="button"
               onClick={() => toggle(ymd, isPast)}
               className="btn"
+              aria-pressed={isSel}
               style={{
                 padding: '8px 10px',
                 borderRadius: 12,
                 background: bg,
                 color,
                 borderColor,
+                borderWidth,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
+                position: 'relative',
                 opacity,
                 cursor
               }}
               title={isPast ? `${ymd} (past)` : ymd}
               disabled={isPast}
             >
+              {isSel && (
+                <span aria-hidden="true" style={{ position: 'absolute', top: 6, right: 6, background: '#111', color: '#fff', borderRadius: 999, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, boxShadow: '0 1px 0 rgba(0,0,0,.2)' }}>✓</span>
+              )}
               <span style={{ fontWeight: 700 }}>{d.toLocaleDateString(undefined, { weekday: 'short' })}</span>
               <span className="small" style={{ color: 'var(--muted)' }}>{d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
             </button>
