@@ -15,25 +15,52 @@ function dayLabel(d: Date): string {
   return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+// Month coloring helpers
+function monthHue(month: number): number {
+  // 12 distinct hues across the circle
+  return (month * 30) % 360;
+}
+function hsl(h: number, s: number, l: number): string {
+  return `hsl(${h}, ${s}%, ${l}%)`;
+}
+function monthBackground(month: number, weekend: boolean): string {
+  const h = monthHue(month);
+  // Use lighter background for weekdays, darker for weekends
+  const l = weekend ? 74 : 86; // lightness
+  return hsl(h, 70, l);
+}
+function monthBorder(month: number): string {
+  const h = monthHue(month);
+  return hsl(h, 70, 35);
+}
+
 export default function TimeslotPicker({ onAdd }: { onAdd: (t: Timeslot) => void }) {
   const [date, setDate] = useState<string>('');
   const [start, setStart] = useState<string>('19:00');
   const [end, setEnd] = useState<string>('22:00');
   const [selected, setSelected] = useState<Record<string, boolean>>({});
 
-  const upcomingDays = useMemo(() => {
-    // Build a 3-week window starting today
+  const { weekDays, todayYMD } = useMemo(() => {
+    // Compute Monday of the current week (Mon-Sun), using local time.
+    const now = new Date();
+    const todayYMDLocal = toYMD(now);
+    // In JS getDay(): 0=Sun,1=Mon,...6=Sat. Convert so Monday=0.
+    const dowMondayZero = (now.getDay() + 6) % 7; // 0..6
+    const monday = new Date(now);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(now.getDate() - dowMondayZero);
     const days: { ymd: string; date: Date }[] = [];
-    const base = new Date();
-    for (let i = 0; i < 21; i++) {
-      const d = new Date(base);
-      d.setDate(base.getDate() + i);
+    // Show current week + next 7 weeks (total 8 weeks = 56 days)
+    for (let i = 0; i < 56; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
       days.push({ ymd: toYMD(d), date: d });
     }
-    return days;
+    return { weekDays: days, todayYMD: todayYMDLocal };
   }, []);
 
-  function toggle(ymd: string) {
+  function toggle(ymd: string, disabled?: boolean) {
+    if (disabled) return;
     setSelected((prev) => ({ ...prev, [ymd]: !prev[ymd] }));
     setDate(''); // de-emphasize the single-date input when using multi-select
   }
@@ -57,30 +84,41 @@ export default function TimeslotPicker({ onAdd }: { onAdd: (t: Timeslot) => void
 
   return (
     <div style={{ display: 'grid', gap: 8 }}>
-      <div className="small">Pick one or more dates, then choose a time range and click "Add Timeslots".</div>
+      <div className="small">Pick a date in the next 7 weeks (Mon–Sun), then choose a time range and click "Add Timeslots".</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 8 }}>
-        {upcomingDays.map(({ ymd, date: d }) => {
+        {weekDays.map(({ ymd, date: d }) => {
           const isSel = selected[ymd] ?? false;
+          const isPast = ymd < todayYMD; // string compare works for YYYY-MM-DD
+          const month = d.getMonth();
+          const weekend = d.getDay() === 0 || d.getDay() === 6; // Sun or Sat
+          const bg = monthBackground(month, weekend);
+          const color = '#111';
+          const borderColor = isSel ? monthBorder(month) : '#222';
+          const opacity = isPast ? 0.5 : 1;
+          const cursor = isPast ? 'not-allowed' as const : 'pointer' as const;
           return (
             <button
               key={ymd}
               type="button"
-              onClick={() => toggle(ymd)}
+              onClick={() => toggle(ymd, isPast)}
               className="btn"
               style={{
                 padding: '8px 10px',
                 borderRadius: 12,
-                background: isSel ? 'var(--primary)' : 'var(--surface)',
-                color: isSel ? '#fff' : 'inherit',
-                borderColor: isSel ? '#c66000' : '#222',
+                background: bg,
+                color,
+                borderColor,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start'
+                alignItems: 'flex-start',
+                opacity,
+                cursor
               }}
-              title={ymd}
+              title={isPast ? `${ymd} (past)` : ymd}
+              disabled={isPast}
             >
               <span style={{ fontWeight: 700 }}>{d.toLocaleDateString(undefined, { weekday: 'short' })}</span>
-              <span className="small" style={{ color: isSel ? 'rgba(255,255,255,.9)' : 'var(--muted)' }}>{d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+              <span className="small" style={{ color: 'var(--muted)' }}>{d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
             </button>
           );
         })}
@@ -89,7 +127,7 @@ export default function TimeslotPicker({ onAdd }: { onAdd: (t: Timeslot) => void
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div>
           <label className="small">Or pick a single date</label><br />
-          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="input" style={{ maxWidth: 200 }} />
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} min={todayYMD} className="input" style={{ maxWidth: 200 }} />
         </div>
         <div>
           <label className="small">Start</label><br />

@@ -120,7 +120,6 @@ export default function CreateSeriesPage() {
       {step === 2 && (
         <section className="card">
           <h2 style={{marginTop:0}}>Select Board Games</h2>
-          <GameAutocomplete onAdd={addGame} />
           {!!games.length && (
             <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginTop:12 }}>
               {games.map(g => (
@@ -132,6 +131,7 @@ export default function CreateSeriesPage() {
               ))}
             </div>
           )}
+          <GameAutocomplete onAdd={addGame} />
           <div style={{display:'flex',justifyContent:'space-between',marginTop:16}}>
             <button className="btn" onClick={()=>setStep(1)}>Previous</button>
             <button className="btn btn-primary" onClick={()=>setStep(3)}>Next: Set Times</button>
