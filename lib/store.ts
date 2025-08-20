@@ -234,3 +234,4 @@ if (supabaseUrl && supabaseKey) {
 }
 
 export const store = storeImpl;
+export const isSupabaseEnabled = Boolean(supabaseUrl && supabaseKey);

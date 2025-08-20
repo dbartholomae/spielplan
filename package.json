@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup:supabase": "node scripts/setup-supabase.js"
+    "setup:supabase": "tsx scripts/setup-supabase.ts"
   },
   "dependencies": {
     "next": "^14.2.12",
@@ -23,6 +23,8 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.12"
+    "eslint-config-next": "^14.2.12",
+    "tsx": "^4.16.2",
+    "dotenv": "^16.4.5"
   }
 }
