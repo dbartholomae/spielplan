@@ -31,7 +31,9 @@ export default function LoginPage() {
     setInfo(null);
     setErr(null);
     try {
-      const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
+      // Build redirect URL based on current environment/domain
+      const { getBaseUrl } = await import('../../lib/url');
+      const redirectTo = getBaseUrl();
       const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } });
       if (error) throw error;
       setInfo(t('auth.magicLinkSent'));
