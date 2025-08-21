@@ -1,19 +1,17 @@
+import Footer from "../components/Footer";
+import "./globals.css";
+
 export const metadata = {
-  title: 'Spielplan',
-  description: 'Hello World Next.js + Supabase on Vercel',
+  title: "Spielplan",
+  description: "GameNight Scheduler",
 };
 
-import './globals.css';
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
         {children}
+        <Footer />
       </body>
     </html>
   );

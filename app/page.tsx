@@ -41,7 +41,8 @@ export default function HomePage() {
 
   useEffect(() => {
     (async () => {
-      if (!effectiveOwner) return;
+      // Only load the personal list when the user is logged in
+      if (!userId) return;
       setSeriesLoading(true);
       setSeriesError(null);
       let authHeader: Record<string, string> = {};
@@ -64,7 +65,7 @@ export default function HomePage() {
         setSeriesLoading(false);
       }
     })();
-  }, [effectiveOwner]);
+  }, [userId, effectiveOwner]);
 
   async function signOut() {
     if (!supabase) return;
@@ -143,6 +144,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {userId ? (
       <main className="container grid">
         <div className="flex-between">
           <h2>{t('series.yourEvents')}</h2>
@@ -185,6 +187,7 @@ export default function HomePage() {
           </>
         )}
       </main>
+      ) : null}
     </>
   );
 }

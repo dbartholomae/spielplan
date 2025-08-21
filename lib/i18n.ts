@@ -89,6 +89,21 @@ export type I18nKey =
   | 'times.addTimeslots'
   | 'times.clearSelection'
   | 'times.past'
+  | 'footer.privacy'
+  | 'footer.imprint'
+  | 'privacy.title'
+  | 'privacy.intro'
+  | 'privacy.data'
+  | 'privacy.contact'
+  | 'imprint.title'
+  | 'imprint.name'
+  | 'imprint.address'
+  | 'imprint.email'
+  | 'imprint.phone'
+  | 'imprint.vatid'
+  | 'imprint.responsible'
+  | 'imprint.dispute'
+  | 'imprint.missingNotice'
   ;
 
 const en: Record<I18nKey, string> = {
@@ -170,6 +185,21 @@ const en: Record<I18nKey, string> = {
     'times.addTimeslots': 'Add Timeslots',
     'times.clearSelection': 'Clear selection',
     'times.past': 'past',
+      'footer.privacy': 'Privacy Policy',
+      'footer.imprint': 'Imprint',
+      'privacy.title': 'Privacy Policy',
+      'privacy.intro': 'We only store the data necessary to run this service: the series you create, the games and timeslots you add, and the votes you and your participants submit. We do not sell your data.',
+      'privacy.data': 'Data stored may include your Supabase user ID (if signed in), series titles, selected games and timeslots, and the names you provide with votes.',
+      'privacy.contact': 'Questions? Contact the site owner.',
+      'imprint.title': 'Imprint',
+      'imprint.name': 'Name',
+      'imprint.address': 'Address',
+      'imprint.email': 'Email',
+      'imprint.phone': 'Phone',
+      'imprint.vatid': 'VAT ID',
+      'imprint.responsible': 'Responsible for content (§ 55 RStV)',
+      'imprint.dispute': 'Online dispute resolution: We are not willing or obliged to participate in dispute resolution proceedings before a consumer arbitration board.',
+      'imprint.missingNotice': 'Site owner: please provide your details so we can complete the Imprint.',
 };
 
 const de: Record<I18nKey, string> = {
@@ -251,6 +281,21 @@ const de: Record<I18nKey, string> = {
     'times.addTimeslots': 'Zeitfenster hinzufügen',
     'times.clearSelection': 'Auswahl löschen',
     'times.past': 'vergangen',
+      'footer.privacy': 'Datenschutzerklärung',
+      'footer.imprint': 'Impressum',
+      'privacy.title': 'Datenschutzerklärung',
+      'privacy.intro': 'Wir speichern nur die Daten, die zum Betrieb dieses Dienstes notwendig sind: die von dir erstellten Reihen, die hinzugefügten Spiele und Zeitfenster sowie die von dir und Teilnehmenden abgegebenen Stimmen. Wir verkaufen keine Daten.',
+      'privacy.data': 'Gespeicherte Daten können deine Supabase-Benutzer-ID (falls angemeldet), Reihen-Titel, ausgewählte Spiele und Zeitfenster sowie die bei Stimmen angegebenen Namen umfassen.',
+      'privacy.contact': 'Fragen? Wende dich an den Betreiber der Seite.',
+      'imprint.title': 'Impressum',
+      'imprint.name': 'Name',
+      'imprint.address': 'Anschrift',
+      'imprint.email': 'E-Mail',
+      'imprint.phone': 'Telefon',
+      'imprint.vatid': 'USt-IdNr.',
+      'imprint.responsible': 'Verantwortlich für den Inhalt (§ 55 RStV)',
+      'imprint.dispute': 'Online-Streitbeilegung: Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.',
+      'imprint.missingNotice': 'Betreiber: Bitte trage deine Angaben ein, damit das Impressum vollständig ist.',
 };
 
 export function getStrings(locale: Locale): Record<I18nKey, string> {
