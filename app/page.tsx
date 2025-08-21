@@ -58,7 +58,7 @@ export default function HomePage() {
         const data = await res.json();
         setSeries(data.items ?? []);
       } catch (e: any) {
-        setSeriesError('Failed to load your event series.');
+        setSeriesError(t('home.loadError'));
         setSeries([]);
       } finally {
         setSeriesLoading(false);
@@ -73,7 +73,7 @@ export default function HomePage() {
 
   async function deleteSeries(slug: string) {
     if (!slug) return;
-    const confirmed = window.confirm('Delete this event series? This cannot be undone.');
+    const confirmed = window.confirm(t('home.deleteConfirm'));
     if (!confirmed) return;
     setDeleteError(null);
     setDeletingSlug(slug);
@@ -96,7 +96,7 @@ export default function HomePage() {
       // Update UI
       setSeries(prev => prev.filter(s => s.slug !== slug));
     } catch (e) {
-      setDeleteError('Failed to delete the event series. Please try again.');
+      setDeleteError(t('home.deleteError'));
     } finally {
       setDeletingSlug(null);
     }
@@ -129,15 +129,15 @@ export default function HomePage() {
           <div className="how-cards">
             <div className="card">
               <div className="card-header">{t('home.pickGames')}</div>
-              <div className="small">Search BoardGameGeek and add one or more games for your night.</div>
+              <div className="small">{t('home.pickGamesHelp')}</div>
             </div>
             <div className="card">
               <div className="card-header">{t('home.setDates')}</div>
-              <div className="small">Add a few options so everyone can choose what works.</div>
+              <div className="small">{t('home.setDatesHelp')}</div>
             </div>
             <div className="card">
               <div className="card-header">{t('home.shareVote')}</div>
-              <div className="small">Share a public link. Friends can vote without creating an account.</div>
+              <div className="small">{t('home.shareVoteHelp')}</div>
             </div>
           </div>
         </div>

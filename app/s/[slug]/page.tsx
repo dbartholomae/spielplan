@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
+import { useI18n } from '../../../lib/i18n';
 
 type Series = {
   id: string;
@@ -28,6 +29,7 @@ function formatIso(iso?: string) {
 
 export default function PublicSeriesPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
+  const { t } = useI18n();
   const [series, setSeries] = useState<Series | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +114,7 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
     if (!series) return;
     // Require a non-empty name
     if (!voterName || voterName.trim() === '') {
-      setError('Please enter your name');
+      setError(t('public.nameRequiredError'));
       return;
     }
     setSubmitting(true);
@@ -127,9 +129,9 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
         body: JSON.stringify({ voterKey, voterName: name, selectedGameIds, selectedTimeslotIds })
       });
       if (!res.ok) throw new Error(await res.text());
-      alert('Your availability was saved. Thank you!');
+      alert(t('public.saveSuccess'));
     } catch (e: any) {
-      setError('Failed to submit your choices');
+      setError(t('public.submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -153,8 +155,8 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
     return map;
   }, [votes, series]);
 
-  if (loading) return <main className="container">Loading…</main>;
-  if (error) return <main className="container" style={{ color: 'crimson' }}>{error}</main>;
+  if (loading) return <main className="container">{t('public.loading')}</main>;
+  if (error) return <main className="container" style={{ color: 'crimson' }}>{t('public.notFound')}</main>;
   if (!series) return null;
 
   // Owner dashboard view
@@ -162,21 +164,21 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
     return (
       <main className="container grid">
         <div className="flex" style={{gap:8, alignItems:'center'}}>
-          <a href="/" className="btn">← Back</a>
-          <h1 style={{margin:'0 0 0 .5rem'}}>{series.title || 'Board game night'}</h1>
+          <a href="/" className="btn">{t('nav.back')}</a>
+          <h1 style={{margin:'0 0 0 .5rem'}}>{series.title || t('public.titleFallback')}</h1>
         </div>
-        <p className="small">Current selections by game and timeslot. Click a cell to see who voted for that combination.</p>
+        <p className="small">{t('owner.instructions')}</p>
 
         <div className="card" style={{ overflowX: 'auto' }}>
           {votesLoading ? (
-            <div className="small" style={{ padding: 12 }}>⏳ Loading votes…</div>
+            <div className="small" style={{ padding: 12 }}>⏳ {t('public.loading')}</div>
           ) : votesError ? (
-            <div className="small" style={{ padding: 12, color: 'crimson' }}>{votesError}</div>
+            <div className="small" style={{ padding: 12, color: 'crimson' }}>{t('owner.loadVotesError')}</div>
           ) : (
             <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '8px' }}>Timeslot \\ Game</th>
+                  <th style={{ textAlign: 'left', padding: '8px' }}>{t('owner.tableHeader')}</th>
                   {series.games.map(g => (
                     <th key={g.id} style={{ textAlign: 'left', padding: '8px' }}>{g.name}</th>
                   ))}
@@ -225,13 +227,13 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
   return (
     <main className="container grid">
       <div className="flex" style={{gap:8, alignItems:'center'}}>
-        <a href="/" className="btn">← Back</a>
-        <h1 style={{margin:'0 0 0 .5rem'}}>{series.title || 'Board game night'}</h1>
+        <a href="/" className="btn">{t('nav.back')}</a>
+        <h1 style={{margin:'0 0 0 .5rem'}}>{series.title || t('public.titleFallback')}</h1>
       </div>
-      <p className="small">Pick the games you want to play and the timeslots you can join.</p>
+      <p className="small">{t('public.instructions')}</p>
 
       <section className="card">
-        <h2 style={{ marginTop: 0 }}>Games</h2>
+        <h2 style={{ marginTop: 0 }}>{t('public.games')}</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
           {series.games.map(g => {
             const checked = gameSel[g.id] ?? false;
@@ -247,7 +249,7 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
       </section>
 
       <section className="card">
-        <h2 style={{ marginTop: 0 }}>Timeslots</h2>
+        <h2 style={{ marginTop: 0 }}>{t('public.timeslots')}</h2>
         <ul className="list">
           {series.timeslots.map(t => {
             const checked = slotSel[t.id] ?? false;
@@ -264,12 +266,12 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
       </section>
 
       <div className="flex" style={{gap:12, alignItems:'center'}}>
-        <input value={voterName} onChange={e => setVoterName(e.target.value)} placeholder="Your name (required)" required className="input" />
-        <button disabled={submitting || !voterName || voterName.trim() === ''} onClick={submit} className="btn btn-primary">{submitting ? '⏳ Saving…' : 'Save my availability'}</button>
+        <input value={voterName} onChange={e => setVoterName(e.target.value)} placeholder={t('public.namePlaceholderRequired')} required className="input" />
+        <button disabled={submitting || !voterName || voterName.trim() === ''} onClick={submit} className="btn btn-primary">{submitting ? '⏳ '+t('public.saving') : t('public.saveAvailability')}</button>
       </div>
 
       <div className="card">
-        Share this link: <code className="badge" style={{marginLeft:8}}>{typeof window !== 'undefined' ? window.location.href : ''}</code>
+        {t('public.shareLink')} <code className="badge" style={{marginLeft:8}}>{typeof window !== 'undefined' ? window.location.href : ''}</code>
       </div>
     </main>
   );
@@ -282,7 +284,7 @@ function OwnerDialog({ onClose, slot, game, names }: { onClose: () => void; slot
         <button className="btn btn-ghost" onClick={onClose} style={{ position: 'absolute', right: 8, top: 8 }}>✕</button>
         <h3 style={{ marginTop: 0, marginRight: 32 }}>{game.name} @ {formatIso(slot.startsAt)}{slot.endsAt ? ` - ${new Date(slot.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}</h3>
         {names.length === 0 ? (
-          <p className="small">No voters chose this combination yet.</p>
+          <p className="small">{t('owner.noVotesForCell')}</p>
         ) : (
           <ul className="list">
             {names.map((n, i) => (
