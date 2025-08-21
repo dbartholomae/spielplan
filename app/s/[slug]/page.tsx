@@ -278,6 +278,7 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
 }
 
 function OwnerDialog({ onClose, slot, game, names }: { onClose: () => void; slot: { id: string; startsAt: string; endsAt?: string }; game: { id: string; name: string }; names: string[] }) {
+  const { t } = useI18n();
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div className="card" style={{ maxWidth: 480, width: '100%', position: 'relative' }}>

@@ -274,15 +274,19 @@ export class SupabaseStore {
   }
 }
 
-// Choose store implementation based on environment (Supabase only)
+// Choose store implementation based on environment (fallback to in-memory if Supabase not configured)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 // Prefer service role key for server-side operations to avoid relying on RLS for public reads.
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('[Store] Supabase is required. Missing NEXT_PUBLIC_SUPABASE_URL and a key (SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY/SUPABASE_ANON_KEY).');
+let storeImpl: InMemoryStore | SupabaseStore;
+export const isSupabaseEnabled = !!(supabaseUrl && supabaseKey);
+
+if (isSupabaseEnabled) {
+  const client = createClient(supabaseUrl as string, supabaseKey as string);
+  storeImpl = new SupabaseStore(client);
+} else {
+  storeImpl = new InMemoryStore();
 }
 
-const client = createClient(supabaseUrl, supabaseKey);
-export const store: SupabaseStore = new SupabaseStore(client);
-export const isSupabaseEnabled = true;
+export const store = storeImpl;

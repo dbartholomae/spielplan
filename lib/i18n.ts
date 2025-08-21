@@ -91,6 +91,10 @@ export type I18nKey =
   | 'times.past'
   | 'footer.privacy'
   | 'footer.imprint'
+  | 'terms.title'
+  | 'terms.intro'
+  | 'terms.liability'
+  | 'terms.contact'
   | 'privacy.title'
   | 'privacy.intro'
   | 'privacy.data'
@@ -187,6 +191,10 @@ const en: Record<I18nKey, string> = {
     'times.past': 'past',
       'footer.privacy': 'Privacy Policy',
       'footer.imprint': 'Imprint',
+      'terms.title': 'Terms of Service',
+      'terms.intro': 'By using this site, you agree to act respectfully and responsibly. This service is provided as-is without warranties.',
+      'terms.liability': 'We are not liable for any damages arising from the use of this service.',
+      'terms.contact': 'Questions about the terms? Contact the site owner.',
       'privacy.title': 'Privacy Policy',
       'privacy.intro': 'We only store the data necessary to run this service: the series you create, the games and timeslots you add, and the votes you and your participants submit. We do not sell your data.',
       'privacy.data': 'Data stored may include your Supabase user ID (if signed in), series titles, selected games and timeslots, and the names you provide with votes.',
@@ -283,6 +291,10 @@ const de: Record<I18nKey, string> = {
     'times.past': 'vergangen',
       'footer.privacy': 'Datenschutzerklärung',
       'footer.imprint': 'Impressum',
+      'terms.title': 'Nutzungsbedingungen',
+      'terms.intro': 'Durch die Nutzung dieser Seite erklärst du dich zu einem respektvollen und verantwortungsvollen Verhalten bereit. Der Dienst wird ohne Gewähr bereitgestellt.',
+      'terms.liability': 'Wir übernehmen keine Haftung für Schäden, die aus der Nutzung dieses Dienstes entstehen.',
+      'terms.contact': 'Fragen zu den Nutzungsbedingungen? Wende dich an den Betreiber der Seite.',
       'privacy.title': 'Datenschutzerklärung',
       'privacy.intro': 'Wir speichern nur die Daten, die zum Betrieb dieses Dienstes notwendig sind: die von dir erstellten Reihen, die hinzugefügten Spiele und Zeitfenster sowie die von dir und Teilnehmenden abgegebenen Stimmen. Wir verkaufen keine Daten.',
       'privacy.data': 'Gespeicherte Daten können deine Supabase-Benutzer-ID (falls angemeldet), Reihen-Titel, ausgewählte Spiele und Zeitfenster sowie die bei Stimmen angegebenen Namen umfassen.',

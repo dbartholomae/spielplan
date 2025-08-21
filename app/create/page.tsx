@@ -159,11 +159,11 @@ export default function CreateSeriesPage() {
           <TimeslotPicker onAdd={addTimeslot} />
           {!!timeslots.length && (
             <ul className="list" style={{marginTop:12}}>
-              {timeslots.map(t => (
-                <li key={t.id} className="item" style={{padding:'8px 12px'}}>
+              {timeslots.map(slot => (
+                <li key={slot.id} className="item" style={{padding:'8px 12px'}}>
                   <div className="flex-between">
-                    <span>{formatIso(t.startsAt)}{t.endsAt ? ` - ${new Date(t.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}</span>
-                    <button onClick={()=>removeTimeslot(t.id)} className="btn">{t('create.remove')}</button>
+                    <span>{formatIso(slot.startsAt)}{slot.endsAt ? ` - ${new Date(slot.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}</span>
+                    <button onClick={()=>removeTimeslot(slot.id)} className="btn">{t('create.remove')}</button>
                   </div>
                 </li>
               ))}
