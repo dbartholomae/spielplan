@@ -34,6 +34,8 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
 
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [votes, setVotes] = useState<Vote[]>([]);
+  const [votesLoading, setVotesLoading] = useState<boolean>(false);
+  const [votesError, setVotesError] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState<{ gameId: string; slotId: string } | null>(null);
 
   const voterKey = useMemo(() => {
@@ -90,12 +92,19 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
   useEffect(() => {
     (async () => {
       if (!series || !isOwner) return;
+      setVotesLoading(true);
+      setVotesError(null);
       try {
         const res = await fetch(`/api/series/${slug}/vote`);
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         setVotes(data.votes ?? []);
-      } catch {}
+      } catch (e: any) {
+        setVotesError('Failed to load votes.');
+        setVotes([]);
+      } finally {
+        setVotesLoading(false);
+      }
     })();
   }, [series, isOwner, slug]);
 
@@ -159,39 +168,45 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
         <p className="small">Current selections by game and timeslot. Click a cell to see who voted for that combination.</p>
 
         <div className="card" style={{ overflowX: 'auto' }}>
-          <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left', padding: '8px' }}>Timeslot \ Game</th>
-                {series.games.map(g => (
-                  <th key={g.id} style={{ textAlign: 'left', padding: '8px' }}>{g.name}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {series.timeslots.map(t => (
-                <tr key={t.id}>
-                  <td style={{ padding: '8px', whiteSpace: 'nowrap' }}>{formatIso(t.startsAt)}{t.endsAt ? ` - ${new Date(t.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}</td>
-                  {series.games.map(g => {
-                    const key = `${t.id}|${g.id}`;
-                    const c = counts.get(key)?.count ?? 0;
-                    const clickable = (counts.get(key)?.count ?? 0) > 0;
-                    return (
-                      <td key={g.id} style={{ padding: '8px' }}>
-                        <button
-                          className="btn"
-                          style={{ padding: '4px 8px', opacity: clickable ? 1 : 0.6 }}
-                          onClick={() => setShowDialog({ slotId: t.id, gameId: g.id })}
-                        >
-                          {c}
-                        </button>
-                      </td>
-                    );
-                  })}
+          {votesLoading ? (
+            <div className="small" style={{ padding: 12 }}>⏳ Loading votes…</div>
+          ) : votesError ? (
+            <div className="small" style={{ padding: 12, color: 'crimson' }}>{votesError}</div>
+          ) : (
+            <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '8px' }}>Timeslot \\ Game</th>
+                  {series.games.map(g => (
+                    <th key={g.id} style={{ textAlign: 'left', padding: '8px' }}>{g.name}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {series.timeslots.map(t => (
+                  <tr key={t.id}>
+                    <td style={{ padding: '8px', whiteSpace: 'nowrap' }}>{formatIso(t.startsAt)}{t.endsAt ? ` - ${new Date(t.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}</td>
+                    {series.games.map(g => {
+                      const key = `${t.id}|${g.id}`;
+                      const c = counts.get(key)?.count ?? 0;
+                      const clickable = (counts.get(key)?.count ?? 0) > 0;
+                      return (
+                        <td key={g.id} style={{ padding: '8px' }}>
+                          <button
+                            className="btn"
+                            style={{ padding: '4px 8px', opacity: clickable ? 1 : 0.6 }}
+                            onClick={() => setShowDialog({ slotId: t.id, gameId: g.id })}
+                          >
+                            {c}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {showDialog && (
@@ -250,7 +265,7 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
 
       <div className="flex" style={{gap:12, alignItems:'center'}}>
         <input value={voterName} onChange={e => setVoterName(e.target.value)} placeholder="Your name (required)" required className="input" />
-        <button disabled={submitting || !voterName || voterName.trim() === ''} onClick={submit} className="btn btn-primary">{submitting ? 'Saving…' : 'Save my availability'}</button>
+        <button disabled={submitting || !voterName || voterName.trim() === ''} onClick={submit} className="btn btn-primary">{submitting ? '⏳ Saving…' : 'Save my availability'}</button>
       </div>
 
       <div className="card">

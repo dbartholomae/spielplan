@@ -172,7 +172,7 @@ export default function CreateSeriesPage() {
           {error && <div style={{ color: 'crimson', marginTop:12 }}>{error}</div>}
           <div style={{display:'flex',justifyContent:'space-between',marginTop:16}}>
             <button className="btn" onClick={()=>setStep(2)}>Previous</button>
-            <button disabled={creating || games.length===0 || timeslots.length===0} onClick={createSeries} className="btn btn-primary">{creating? 'Creating…' : 'Create Event Series'}</button>
+            <button disabled={creating || games.length===0 || timeslots.length===0} onClick={createSeries} className="btn btn-primary">{creating? '⏳ Creating…' : 'Create Event Series'}</button>
           </div>
         </section>
       )}

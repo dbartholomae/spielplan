@@ -8,6 +8,10 @@ export default function HomePage() {
   const { t } = useI18n();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [series, setSeries] = useState<any[]>([]);
+  const [seriesLoading, setSeriesLoading] = useState<boolean>(false);
+  const [seriesError, setSeriesError] = useState<string | null>(null);
+  const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const ownerKey = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -38,6 +42,8 @@ export default function HomePage() {
   useEffect(() => {
     (async () => {
       if (!effectiveOwner) return;
+      setSeriesLoading(true);
+      setSeriesError(null);
       let authHeader: Record<string, string> = {};
       try {
         if (supabase) {
@@ -46,9 +52,17 @@ export default function HomePage() {
           if (token) authHeader = { Authorization: `Bearer ${token}` };
         }
       } catch {}
-      const res = await fetch(`/api/series?ownerId=${encodeURIComponent(effectiveOwner)}`, { headers: { ...authHeader } });
-      const data = await res.json();
-      setSeries(data.items ?? []);
+      try {
+        const res = await fetch(`/api/series?ownerId=${encodeURIComponent(effectiveOwner)}`, { headers: { ...authHeader } });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        setSeries(data.items ?? []);
+      } catch (e: any) {
+        setSeriesError('Failed to load your event series.');
+        setSeries([]);
+      } finally {
+        setSeriesLoading(false);
+      }
     })();
   }, [effectiveOwner]);
 
@@ -61,6 +75,8 @@ export default function HomePage() {
     if (!slug) return;
     const confirmed = window.confirm('Delete this event series? This cannot be undone.');
     if (!confirmed) return;
+    setDeleteError(null);
+    setDeletingSlug(slug);
     try {
       let authHeader: Record<string, string> = {};
       let url = `/api/series/${encodeURIComponent(slug)}`;
@@ -80,7 +96,9 @@ export default function HomePage() {
       // Update UI
       setSeries(prev => prev.filter(s => s.slug !== slug));
     } catch (e) {
-      alert('Failed to delete.');
+      setDeleteError('Failed to delete the event series. Please try again.');
+    } finally {
+      setDeletingSlug(null);
     }
   }
 
@@ -131,33 +149,40 @@ export default function HomePage() {
           <a href="/create" className="btn btn-primary">{t('series.new')}</a>
         </div>
 
-        {series.length === 0 ? (
+        {seriesLoading ? (
+          <p className="small">⏳ {t('public.loading')}</p>
+        ) : seriesError ? (
+          <p className="small" style={{ color: 'crimson' }}>{seriesError}</p>
+        ) : series.length === 0 ? (
           <p className="small">{t('series.none')}</p>
         ) : (
-          <ul className="list">
-            {series.map((s: any) => (
-              <li key={s.id} className="item">
-                <div className="item-head">
-                  <div>
-                    <div style={{fontWeight:700}}>{s.title || t('public.titleFallback')}</div>
-                    <div className="small">{new Date(s.createdAt).toLocaleString()}</div>
+          <>
+            {deleteError && <div className="card" style={{ color: 'crimson', marginBottom: 12 }}>{deleteError}</div>}
+            <ul className="list">
+              {series.map((s: any) => (
+                <li key={s.id} className="item">
+                  <div className="item-head">
+                    <div>
+                      <div style={{fontWeight:700}}>{s.title || t('public.titleFallback')}</div>
+                      <div className="small">{new Date(s.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div className="flex" style={{gap:8}}>
+                      <a href={`/s/${s.slug}`} className="btn">{t('series.open')}</a>
+                      <button disabled={deletingSlug===s.slug} onClick={() => deleteSeries(s.slug)} className="btn btn-ghost" style={{color:'crimson'}}>{deletingSlug===s.slug ? '⏳ '+t('public.loading') : t('series.delete')}</button>
+                    </div>
                   </div>
-                  <div className="flex" style={{gap:8}}>
-                    <a href={`/s/${s.slug}`} className="btn">{t('series.open')}</a>
-                    <button onClick={() => deleteSeries(s.slug)} className="btn btn-ghost" style={{color:'crimson'}}>{t('series.delete')}</button>
-                  </div>
-                </div>
-                {s.games?.length ? (
-                  <div className="kv">
-                    {s.games.slice(0, 5).map((g: any) => (
-                      <span key={g.id} className="pill">{g.name}</span>
-                    ))}
-                    {s.games.length > 5 && <span className="pill">+{s.games.length - 5} {t('series.more')}</span>}
-                  </div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+                  {s.games?.length ? (
+                    <div className="kv">
+                      {s.games.slice(0, 5).map((g: any) => (
+                        <span key={g.id} className="pill">{g.name}</span>
+                      ))}
+                      {s.games.length > 5 && <span className="pill">+{s.games.length - 5} {t('series.more')}</span>}
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </main>
     </>
