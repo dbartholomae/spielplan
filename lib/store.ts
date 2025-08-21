@@ -75,6 +75,28 @@ export class InMemoryStore {
     return this.seriesBySlug.get(slug);
   }
 
+  async deleteSeries(slug: string, ownerId: string): Promise<boolean> {
+    const series = this.seriesBySlug.get(slug);
+    if (!series) return false;
+    if ((series.ownerId ?? '') !== ownerId) return false;
+    // Remove from slug map
+    this.seriesBySlug.delete(slug);
+    // Remove from owner list
+    if (series.ownerId) {
+      const list = this.seriesByOwner.get(series.ownerId) ?? [];
+      const idx = list.findIndex(s => s.slug === slug);
+      if (idx >= 0) {
+        list.splice(idx, 1);
+        this.seriesByOwner.set(series.ownerId, list);
+      }
+    }
+    // Remove votes by series.id if present
+    if (series.id) {
+      this.votesBySeries.delete(series.id);
+    }
+    return true;
+  }
+
   async addVote(vote: Omit<Vote, 'id' | 'createdAt'>): Promise<Vote> {
     const v: Vote = { ...vote, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
     const list = this.votesBySeries.get(v.seriesId) ?? [];
@@ -95,6 +117,39 @@ export class SupabaseStore {
 
   constructor(client: SupabaseClient) {
     this.client = client;
+  }
+
+  async deleteSeries(slug: string, ownerId: string): Promise<boolean> {
+    // Ensure the series exists and is owned by the requester
+    const { data: series, error: selErr } = await this.client
+      .from('series')
+      .select('id')
+      .eq('slug', slug)
+      .eq('owner_id', ownerId)
+      .limit(1)
+      .maybeSingle();
+    if (selErr) {
+      this.throwSchemaError('deleteSeries.select', selErr);
+    }
+    if (!series) return false;
+    const seriesId: string = (series as any).id;
+    // Best-effort delete of votes first (in case no FK cascade)
+    const { error: delVotesErr } = await this.client
+      .from('votes')
+      .delete()
+      .eq('series_id', seriesId);
+    if (delVotesErr && !this.isMissingTableError(delVotesErr)) {
+      this.throwSchemaError('deleteSeries.deleteVotes', delVotesErr);
+    }
+    const { error: delSeriesErr, count } = await this.client
+      .from('series')
+      .delete({ count: 'exact' })
+      .eq('id', seriesId)
+      .eq('owner_id', ownerId);
+    if (delSeriesErr) {
+      this.throwSchemaError('deleteSeries.deleteSeries', delSeriesErr);
+    }
+    return (count ?? 0) > 0;
   }
 
   private isMissingTableError(err: any): boolean {
@@ -219,19 +274,15 @@ export class SupabaseStore {
   }
 }
 
-// Choose store implementation based on environment
+// Choose store implementation based on environment (Supabase only)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+// Prefer service role key for server-side operations to avoid relying on RLS for public reads.
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-let storeImpl: InMemoryStore | SupabaseStore;
-if (supabaseUrl && supabaseKey) {
-  const client = createClient(supabaseUrl, supabaseKey);
-  storeImpl = new SupabaseStore(client);
-  console.log('[Store] Using SupabaseStore');
-} else {
-  storeImpl = new InMemoryStore();
-  console.warn('[Store] Using InMemoryStore (no Supabase env vars set)');
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('[Store] Supabase is required. Missing NEXT_PUBLIC_SUPABASE_URL and a key (SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY/SUPABASE_ANON_KEY).');
 }
 
-export const store = storeImpl;
-export const isSupabaseEnabled = Boolean(supabaseUrl && supabaseKey);
+const client = createClient(supabaseUrl, supabaseKey);
+export const store: SupabaseStore = new SupabaseStore(client);
+export const isSupabaseEnabled = true;

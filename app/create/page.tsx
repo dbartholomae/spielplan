@@ -67,9 +67,18 @@ export default function CreateSeriesPage() {
     setCreating(true);
     setError(null);
     try {
+      // Include Supabase auth token if available so the API can authenticate the user
+      let authHeader: Record<string, string> = {};
+      try {
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+          if (token) authHeader = { Authorization: `Bearer ${token}` };
+        }
+      } catch {}
       const res = await fetch('/api/series', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', ...authHeader },
         body: JSON.stringify({ ownerId: effectiveOwner, title, games, timeslots })
       });
       if (!res.ok) throw new Error(await res.text());
@@ -84,9 +93,14 @@ export default function CreateSeriesPage() {
 
   return (
     <main className="container grid">
-      <div className="flex" style={{gap:8, alignItems:'center'}}>
-        <a href="/" className="btn">{t('nav.back')}</a>
-        <h1 style={{margin:'0 0 0 .5rem'}}>{t('create.title')}</h1>
+      <div className="flex" style={{gap:8, alignItems:'center', justifyContent:'space-between'}}>
+        <div className="flex" style={{gap:8, alignItems:'center'}}>
+          <a href="/" className="btn">{t('nav.back')}</a>
+          <h1 style={{margin:'0 0 0 .5rem'}}>{t('create.title')}</h1>
+        </div>
+        {!userId && supabase ? (
+          <a href="/login" className="btn">{t('auth.signInWithEmail')}</a>
+        ) : null}
       </div>
 
       <div className="stepper">

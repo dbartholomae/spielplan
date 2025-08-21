@@ -32,6 +32,14 @@ import path from 'node:path';
   }
 })();
 
+// To work around "self-signed certificate" issues in some environments, we allow insecure SSL for this setup script
+// by default. You can opt into strict verification by setting SUPABASE_SETUP_STRICT_SSL=1.
+if (process.env.SUPABASE_SETUP_STRICT_SSL !== '1') {
+  // This affects only this Node process and is common for ephemeral setup scripts.
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  console.log('[setup-supabase] Insecure TLS allowed for setup (NODE_TLS_REJECT_UNAUTHORIZED=0). Set SUPABASE_SETUP_STRICT_SSL=1 to enforce strict SSL.');
+}
+
 const url = process.env.SUPABASE_DB_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL;
 if (!url) {
   console.error('[setup-supabase] Missing SUPABASE_DB_URL (or POSTGRES_URL/DATABASE_URL).');
@@ -73,12 +81,19 @@ create index if not exists idx_series_owner_id on public.series(owner_id);
 alter table public.series enable row level security;
 alter table public.votes enable row level security;
 
--- SERIES policies: only the authenticated owner can select/insert/update/delete
+-- SERIES policies: allow public SELECT for reading by slug, but restrict INSERT/UPDATE/DELETE to the owner
 DO $$ BEGIN
-  IF NOT EXISTS (
+  -- Drop legacy select policy if present
+  IF EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'series' AND policyname = 'series_select_own'
   ) THEN
-    EXECUTE 'create policy series_select_own on public.series for select using (owner_id = auth.uid()::text)';
+    EXECUTE 'drop policy series_select_own on public.series';
+  END IF;
+  -- Ensure public select policy exists
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'series' AND policyname = 'series_select_public'
+  ) THEN
+    EXECUTE 'create policy series_select_public on public.series for select using (true)';
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'series' AND policyname = 'series_insert_own'

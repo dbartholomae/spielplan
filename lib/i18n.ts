@@ -15,8 +15,13 @@ export type I18nKey =
   | 'app.subtitle'
   | 'app.startPlanning'
   | 'auth.signInWithGitHub'
+  | 'auth.signInWithGoogle'
   | 'auth.signOut'
   | 'auth.guestMode'
+  | 'auth.signInWithEmail'
+  | 'auth.emailPlaceholder'
+  | 'auth.sendMagicLink'
+  | 'auth.magicLinkSent'
   | 'home.howItWorks'
   | 'home.simple'
   | 'home.pickGames'
@@ -26,6 +31,7 @@ export type I18nKey =
   | 'series.new'
   | 'series.none'
   | 'series.open'
+  | 'series.delete'
   | 'series.more'
   | 'nav.back'
   | 'create.title'
@@ -70,8 +76,13 @@ const en: Record<I18nKey, string> = {
   'app.subtitle': 'The perfect way to coordinate board game nights with friends. Find the best time and games everyone wants to play!',
   'app.startPlanning': 'Start Planning',
   'auth.signInWithGitHub': 'Sign in with GitHub',
+  'auth.signInWithGoogle': 'Sign in with Google',
   'auth.signOut': 'Sign out',
   'auth.guestMode': 'Guest mode',
+  'auth.signInWithEmail': 'Sign in with email',
+  'auth.emailPlaceholder': 'you@example.com',
+  'auth.sendMagicLink': 'Send magic link',
+  'auth.magicLinkSent': 'Check your email for the sign-in link',
   'home.howItWorks': 'How It Works',
   'home.simple': 'Simple, fun, and designed for board game enthusiasts',
   'home.pickGames': '🎯 Pick Games',
@@ -81,6 +92,7 @@ const en: Record<I18nKey, string> = {
   'series.new': 'New Event Series',
   'series.none': 'No event series yet. Click "New Event Series" to start.',
   'series.open': 'Open',
+    'series.delete': 'Delete',
   'series.more': 'more',
   'nav.back': '← Back',
   'create.title': 'Create New Event Series',
@@ -125,8 +137,13 @@ const de: Record<I18nKey, string> = {
   'app.subtitle': 'Die perfekte Art, Spieleabende mit Freunden zu koordinieren. Findet die beste Zeit und die Spiele, die alle spielen wollen!',
   'app.startPlanning': 'Jetzt planen',
   'auth.signInWithGitHub': 'Mit GitHub anmelden',
+  'auth.signInWithGoogle': 'Mit Google anmelden',
   'auth.signOut': 'Abmelden',
   'auth.guestMode': 'Gastmodus',
+  'auth.signInWithEmail': 'Mit E-Mail anmelden',
+  'auth.emailPlaceholder': 'du@beispiel.de',
+  'auth.sendMagicLink': 'Magic Link senden',
+  'auth.magicLinkSent': 'Prüfe deine E-Mails für den Anmeldelink',
   'home.howItWorks': 'So funktioniert’s',
   'home.simple': 'Einfach, spaßig und für Brettspielfans gemacht',
   'home.pickGames': '🎯 Spiele auswählen',
@@ -136,6 +153,7 @@ const de: Record<I18nKey, string> = {
   'series.new': 'Neue Terminreihe',
   'series.none': 'Noch keine Terminreihen. Klicke auf „Neue Terminreihe“, um zu starten.',
   'series.open': 'Öffnen',
+    'series.delete': 'Löschen',
   'series.more': 'mehr',
   'nav.back': '← Zurück',
   'create.title': 'Neue Terminreihe erstellen',

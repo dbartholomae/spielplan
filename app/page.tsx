@@ -38,7 +38,15 @@ export default function HomePage() {
   useEffect(() => {
     (async () => {
       if (!effectiveOwner) return;
-      const res = await fetch(`/api/series?ownerId=${encodeURIComponent(effectiveOwner)}`);
+      let authHeader: Record<string, string> = {};
+      try {
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+          if (token) authHeader = { Authorization: `Bearer ${token}` };
+        }
+      } catch {}
+      const res = await fetch(`/api/series?ownerId=${encodeURIComponent(effectiveOwner)}`, { headers: { ...authHeader } });
       const data = await res.json();
       setSeries(data.items ?? []);
     })();
@@ -49,13 +57,43 @@ export default function HomePage() {
     await supabase.auth.signOut();
   }
 
+  async function deleteSeries(slug: string) {
+    if (!slug) return;
+    const confirmed = window.confirm('Delete this event series? This cannot be undone.');
+    if (!confirmed) return;
+    try {
+      let authHeader: Record<string, string> = {};
+      let url = `/api/series/${encodeURIComponent(slug)}`;
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (token) authHeader = { Authorization: `Bearer ${token}` };
+      } else if (effectiveOwner) {
+        // In guest mode, include ownerId so the API can validate ownership
+        url += `?ownerId=${encodeURIComponent(effectiveOwner)}`;
+      }
+      const res = await fetch(url, { method: 'DELETE', headers: { ...authHeader } });
+      if (!res.ok && res.status !== 204) {
+        const text = await res.text();
+        throw new Error(text || 'Delete failed');
+      }
+      // Update UI
+      setSeries(prev => prev.filter(s => s.slug !== slug));
+    } catch (e) {
+      alert('Failed to delete.');
+    }
+  }
+
+
   return (
     <>
       <div className="hero">
         <div className="container hero-inner">
-          <div style={{display:'flex',justifyContent:'flex-end'}}>
+          <div style={{display:'flex',justifyContent:'flex-end', gap: 8}}>
             {userId ? (
                 <button onClick={signOut} className="btn btn-ghost">{t('auth.signOut')}</button>
+              ) : supabase ? (
+                <a href="/login" className="btn btn-ghost">{t('auth.signInWithEmail')}</a>
               ) : (
                 <span className="badge">{t('auth.guestMode')}</span>
               )}
@@ -104,7 +142,10 @@ export default function HomePage() {
                     <div style={{fontWeight:700}}>{s.title || t('public.titleFallback')}</div>
                     <div className="small">{new Date(s.createdAt).toLocaleString()}</div>
                   </div>
-                  <a href={`/s/${s.slug}`} className="btn">{t('series.open')}</a>
+                  <div className="flex" style={{gap:8}}>
+                    <a href={`/s/${s.slug}`} className="btn">{t('series.open')}</a>
+                    <button onClick={() => deleteSeries(s.slug)} className="btn btn-ghost" style={{color:'crimson'}}>{t('series.delete')}</button>
+                  </div>
                 </div>
                 {s.games?.length ? (
                   <div className="kv">
