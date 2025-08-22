@@ -74,6 +74,8 @@ export type I18nKey =
   | 'owner.tableHeader'
   | 'owner.noVotesForCell'
   | 'owner.loadVotesError'
+  | 'owner.participants'
+  | 'owner.noParticipants'
   | 'results.title'
   | 'results.intro'
   | 'results.topGames'
@@ -170,10 +172,12 @@ const en: Record<I18nKey, string> = {
   'public.loading': 'Loading…',
   'public.notFound': 'Series not found',
   'public.submitError': 'Failed to submit your choices',
-  'owner.instructions': 'Current selections by game and timeslot. Click a cell to see who voted for that combination.',
+  'owner.instructions': 'Current selections by game and timeslot. Click a cell to highlight matching participants below.',
   'owner.tableHeader': 'Timeslot \\ Game',
   'owner.noVotesForCell': 'No voters chose this combination yet.',
   'owner.loadVotesError': 'Failed to load votes.',
+  'owner.participants': 'Participants',
+  'owner.noParticipants': 'No participants yet.',
   'results.title': 'Current Results',
   'results.intro': 'Here are the current votes. Invite friends to vote to refine the plan.',
   'results.topGames': 'Most Voted Games',
@@ -270,10 +274,12 @@ const de: Record<I18nKey, string> = {
   'public.loading': 'Lädt…',
   'public.notFound': 'Terminreihe nicht gefunden',
   'public.submitError': 'Speichern deiner Auswahl fehlgeschlagen',
-  'owner.instructions': 'Aktuelle Auswahl nach Spiel und Zeitfenster. Klicke auf eine Zelle, um die Personen zu sehen.',
+  'owner.instructions': 'Aktuelle Auswahl nach Spiel und Zeitfenster. Klicke auf eine Zelle, um die passenden Teilnehmenden unten hervorzuheben.',
   'owner.tableHeader': 'Zeitfenster \\ Spiel',
   'owner.noVotesForCell': 'Noch niemand hat diese Kombination gewählt.',
   'owner.loadVotesError': 'Stimmen konnten nicht geladen werden.',
+  'owner.participants': 'Teilnehmende',
+  'owner.noParticipants': 'Noch keine Teilnehmenden.',
   'results.title': 'Aktuelle Ergebnisse',
   'results.intro': 'Hier sind die aktuellen Stimmen. Lade Freunde zum Abstimmen ein.',
   'results.topGames': 'Beliebteste Spiele',

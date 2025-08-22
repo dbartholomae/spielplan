@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.7.1",
   "scripts": {
-    "dev": "next dev",
+    "d  ev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

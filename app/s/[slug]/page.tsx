@@ -38,7 +38,9 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
   const [votes, setVotes] = useState<Vote[]>([]);
   const [votesLoading, setVotesLoading] = useState<boolean>(false);
   const [votesError, setVotesError] = useState<string | null>(null);
-  const [showDialog, setShowDialog] = useState<{ gameId: string; slotId: string } | null>(null);
+  const [highlightName, setHighlightName] = useState<string | null>(null);
+  const [highlightedByCell, setHighlightedByCell] = useState<Set<string> | null>(null);
+  const [selectedCellKey, setSelectedCellKey] = useState<string | null>(null);
 
   const voterKey = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -155,6 +157,39 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
     return map;
   }, [votes, series]);
 
+  // Precompute highlighted cell keys for the selected participant
+  const highlightedKeys = useMemo(() => {
+    if (!highlightName) return null as Set<string> | null;
+    const norm = (highlightName.trim() || 'Anonymous');
+    const set = new Set<string>();
+    for (const v of votes) {
+      const vname = (v.voterName?.trim() || 'Anonymous');
+      if (vname === norm) {
+        for (const gid of v.selectedGameIds) {
+          for (const sid of v.selectedTimeslotIds) {
+            set.add(`${sid}|${gid}`);
+          }
+        }
+      }
+    }
+    return set;
+  }, [highlightName, votes]);
+
+  // Heatmap intensity based on max count across all cells (owner view)
+  const maxCount = useMemo(() => {
+    let max = 0;
+    counts.forEach(v => { if (v.count > max) max = v.count; });
+    return max;
+  }, [counts]);
+
+  function heatBg(count: number): string | undefined {
+    if (!maxCount || count <= 0) return undefined;
+    // Use primary blue hue with alpha scaled by count ratio
+    const ratio = Math.max(0, Math.min(1, count / maxCount));
+    const alpha = 0.12 + 0.38 * ratio; // 0.12..0.5 range
+    return `rgba(59,130,246,${alpha.toFixed(3)})`;
+  }
+
   if (loading) return <main className="container">{t('public.loading')}</main>;
   if (error) return <main className="container" style={{ color: 'crimson' }}>{t('public.notFound')}</main>;
   if (!series) return null;
@@ -193,11 +228,18 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
                       const c = counts.get(key)?.count ?? 0;
                       const clickable = (counts.get(key)?.count ?? 0) > 0;
                       return (
-                        <td key={g.id} style={{ padding: '8px' }}>
+                        <td key={g.id} style={{ padding: '8px', background: heatBg(c) }}>
                           <button
                             className="btn"
-                            style={{ padding: '4px 8px', opacity: clickable ? 1 : 0.6 }}
-                            onClick={() => setShowDialog({ slotId: t.id, gameId: g.id })}
+                            style={{ padding: '4px 8px', opacity: clickable ? 1 : 0.6, borderColor: ((selectedCellKey===key) || (highlightedKeys?.has(key))) ? '#f97316' : undefined }}
+                            onClick={() => {
+                              const entry = counts.get(key);
+                              const names = new Set((entry?.names ?? []).map(n => (n?.trim() || 'Anonymous')));
+                              // Clear participant-based cell highlighting when clicking a cell
+                              setHighlightName(null);
+                              setHighlightedByCell(names);
+                              setSelectedCellKey(key);
+                            }}
                           >
                             {c}
                           </button>
@@ -211,14 +253,37 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
           )}
         </div>
 
-        {showDialog && (
-          <OwnerDialog
-            onClose={() => setShowDialog(null)}
-            slot={series.timeslots.find(s => s.id === showDialog.slotId)!}
-            game={series.games.find(g => g.id === showDialog.gameId)!}
-            names={(counts.get(`${showDialog.slotId}|${showDialog.gameId}`)?.names ?? []).slice().sort((a, b) => a.localeCompare(b))}
-          />
-        )}
+        {/* Participants list at the end */}
+        <section className="card">
+          <h2 style={{ marginTop: 0 }}>{t('owner.participants')}</h2>
+          {votesLoading ? (
+            <div className="small" style={{ padding: 12 }}>⏳ {t('public.loading')}</div>
+          ) : (Array.from(new Set(votes.map(v => (v.voterName?.trim() || 'Anonymous')))).length === 0 ? (
+            <p className="small">{t('owner.noParticipants')}</p>
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {Array.from(new Set(votes.map(v => (v.voterName?.trim() || 'Anonymous'))))
+                .sort((a, b) => a.localeCompare(b))
+                .map((name, idx) => {
+                  const active = (highlightName === name) || (highlightedByCell?.has(name) ?? false);
+                  return (
+                    <button
+                      key={idx}
+                      className="btn"
+                      onClick={() => { setHighlightedByCell(null); setSelectedCellKey(null); setHighlightName(prev => prev === name ? null : name); }}
+                      style={{
+                        background: active ? 'rgb(16,185,129)' : undefined,
+                        color: active ? '#fff' : undefined,
+                      }}
+                      aria-pressed={active}
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
+            </div>
+          ))}
+        </section>
       </main>
     );
   }
@@ -277,23 +342,3 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
   );
 }
 
-function OwnerDialog({ onClose, slot, game, names }: { onClose: () => void; slot: { id: string; startsAt: string; endsAt?: string }; game: { id: string; name: string }; names: string[] }) {
-  const { t } = useI18n();
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div className="card" style={{ maxWidth: 480, width: '100%', position: 'relative' }}>
-        <button className="btn btn-ghost" onClick={onClose} style={{ position: 'absolute', right: 8, top: 8 }}>✕</button>
-        <h3 style={{ marginTop: 0, marginRight: 32 }}>{game.name} @ {formatIso(slot.startsAt)}{slot.endsAt ? ` - ${new Date(slot.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}</h3>
-        {names.length === 0 ? (
-          <p className="small">{t('owner.noVotesForCell')}</p>
-        ) : (
-          <ul className="list">
-            {names.map((n, i) => (
-              <li key={i} className="item">{n}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-}
