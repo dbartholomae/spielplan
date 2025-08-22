@@ -70,6 +70,7 @@ export type I18nKey =
   | 'public.loading'
   | 'public.notFound'
   | 'public.submitError'
+  | 'public.selectionRequiredError'
   | 'owner.instructions'
   | 'owner.tableHeader'
   | 'owner.noVotesForCell'
@@ -172,6 +173,7 @@ const en: Record<I18nKey, string> = {
   'public.loading': 'Loading…',
   'public.notFound': 'Series not found',
   'public.submitError': 'Failed to submit your choices',
+    'public.selectionRequiredError': 'Please select at least one game and one timeslot before submitting',
   'owner.instructions': 'Current selections by game and timeslot. Click a cell to highlight matching participants below.',
   'owner.tableHeader': 'Timeslot \\ Game',
   'owner.noVotesForCell': 'No voters chose this combination yet.',
@@ -274,6 +276,7 @@ const de: Record<I18nKey, string> = {
   'public.loading': 'Lädt…',
   'public.notFound': 'Terminreihe nicht gefunden',
   'public.submitError': 'Speichern deiner Auswahl fehlgeschlagen',
+    'public.selectionRequiredError': 'Bitte wähle mindestens ein Spiel und ein Zeitfenster aus, bevor du speicherst',
   'owner.instructions': 'Aktuelle Auswahl nach Spiel und Zeitfenster. Klicke auf eine Zelle, um die passenden Teilnehmenden unten hervorzuheben.',
   'owner.tableHeader': 'Zeitfenster \\ Spiel',
   'owner.noVotesForCell': 'Noch niemand hat diese Kombination gewählt.',

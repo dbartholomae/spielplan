@@ -52,9 +52,18 @@ export default function CreateSeriesPage() {
     (async () => {
       if (supabase) {
         const { data: { session } } = await supabase.auth.getSession();
-        setUserId(session?.user?.id);
+        const uid = session?.user?.id;
+        setUserId(uid);
+        if (!uid) {
+          // Redirect to home if not logged in (Supabase enabled)
+          window.location.replace('/');
+        }
         unsub = supabase.auth.onAuthStateChange((_event, session) => {
-          setUserId(session?.user?.id);
+          const uid2 = session?.user?.id;
+          setUserId(uid2);
+          if (!uid2) {
+            window.location.replace('/');
+          }
         }).data.subscription.unsubscribe;
       }
     })();

@@ -12,6 +12,11 @@ export default function HomePage() {
   const [seriesError, setSeriesError] = useState<string | null>(null);
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Inline magic link login state (when supabase enabled and signed out)
+  const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   const ownerKey = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -72,6 +77,23 @@ export default function HomePage() {
     await supabase.auth.signOut();
   }
 
+  async function sendMagicLink() {
+    if (!supabase || !email.trim()) return;
+    setSending(true);
+    setInfo(null);
+    setErr(null);
+    try {
+      const redirectTo = (typeof window !== 'undefined' && window.location?.origin) ? window.location.origin : undefined;
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } as any });
+      if (error) throw error;
+      setInfo(t('auth.magicLinkSent'));
+    } catch (e: any) {
+      setErr(e?.message || 'Failed to send magic link');
+    } finally {
+      setSending(false);
+    }
+  }
+
   async function deleteSeries(slug: string) {
     if (!slug) return;
     const confirmed = window.confirm(t('home.deleteConfirm'));
@@ -111,15 +133,36 @@ export default function HomePage() {
           <div style={{display:'flex',justifyContent:'flex-end', gap: 8}}>
             {userId ? (
                 <button onClick={signOut} className="btn btn-ghost">{t('auth.signOut')}</button>
-              ) : supabase ? (
-                <a href="/login" className="btn btn-ghost">{t('auth.signInWithEmail')}</a>
-              ) : (
+              ) : supabase ? null : (
                 <span className="badge">{t('auth.guestMode')}</span>
               )}
           </div>
           <h1 className="hero-title">{t('app.title')}</h1>
           <p className="hero-sub">{t('app.subtitle')}</p>
-          <a className="btn btn-primary" href="/create">{t('app.startPlanning')}</a>
+          {userId ? (
+            <a className="btn btn-primary" href="/create">{t('app.startPlanning')}</a>
+          ) : (supabase ? (
+            <section className="card" style={{ maxWidth: 520, margin: '12px auto 0' }}>
+              <label className="small" style={{ display: 'block', textAlign: "left", margin: "4px" }}>Email</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder={t('auth.emailPlaceholder')}
+                  className="input"
+                  style={{ maxWidth: 280 }}
+                />
+                <button onClick={sendMagicLink} disabled={sending || !email.trim()} className="btn btn-primary">
+                  {t('auth.sendMagicLink')}
+                </button>
+              </div>
+              {info && <div className="small" style={{ color: 'var(--muted)', marginTop: 8 }}>{info}</div>}
+              {err && <div className="small" style={{ color: 'crimson', marginTop: 8 }}>{err}</div>}
+            </section>
+          ) : (
+            <a className="btn btn-primary" href="/create">{t('app.startPlanning')}</a>
+          ))}
         </div>
       </div>
 

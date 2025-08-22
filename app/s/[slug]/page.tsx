@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useI18n } from '../../../lib/i18n';
+import ParticipantList from '../../../components/ParticipantList';
 
 type Series = {
   id: string;
@@ -19,6 +20,7 @@ type Vote = {
   voterKey: string;
   selectedGameIds: string[];
   selectedTimeslotIds: string[];
+  createdAt: string;
 };
 
 function formatIso(iso?: string) {
@@ -116,15 +118,18 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
     if (!series) return;
     // Require a non-empty name
     if (!voterName || voterName.trim() === '') {
-      setError(t('public.nameRequiredError'));
+      alert(t('public.nameRequiredError'));
+      return;
+    }
+    const name = voterName.trim();
+    const selectedGameIds = Object.entries(gameSel).filter(([, v]) => v).map(([k]) => k);
+    const selectedTimeslotIds = Object.entries(slotSel).filter(([, v]) => v).map(([k]) => k);
+    if (selectedGameIds.length === 0 || selectedTimeslotIds.length === 0) {
+      alert(t('public.selectionRequiredError'));
       return;
     }
     setSubmitting(true);
-    setError(null);
     try {
-      const name = voterName.trim();
-      const selectedGameIds = Object.entries(gameSel).filter(([, v]) => v).map(([k]) => k);
-      const selectedTimeslotIds = Object.entries(slotSel).filter(([, v]) => v).map(([k]) => k);
       const res = await fetch(`/api/series/${slug}/vote`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -133,7 +138,7 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
       if (!res.ok) throw new Error(await res.text());
       alert(t('public.saveSuccess'));
     } catch (e: any) {
-      setError(t('public.submitError'));
+      alert(t('public.submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -254,36 +259,15 @@ export default function PublicSeriesPage({ params }: { params: { slug: string } 
         </div>
 
         {/* Participants list at the end */}
-        <section className="card">
-          <h2 style={{ marginTop: 0 }}>{t('owner.participants')}</h2>
-          {votesLoading ? (
-            <div className="small" style={{ padding: 12 }}>⏳ {t('public.loading')}</div>
-          ) : (Array.from(new Set(votes.map(v => (v.voterName?.trim() || 'Anonymous')))).length === 0 ? (
-            <p className="small">{t('owner.noParticipants')}</p>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {Array.from(new Set(votes.map(v => (v.voterName?.trim() || 'Anonymous'))))
-                .sort((a, b) => a.localeCompare(b))
-                .map((name, idx) => {
-                  const active = (highlightName === name) || (highlightedByCell?.has(name) ?? false);
-                  return (
-                    <button
-                      key={idx}
-                      className="btn"
-                      onClick={() => { setHighlightedByCell(null); setSelectedCellKey(null); setHighlightName(prev => prev === name ? null : name); }}
-                      style={{
-                        background: active ? 'rgb(16,185,129)' : undefined,
-                        color: active ? '#fff' : undefined,
-                      }}
-                      aria-pressed={active}
-                    >
-                      {name}
-                    </button>
-                  );
-                })}
-            </div>
-          ))}
-        </section>
+        <ParticipantList
+          votes={votes}
+          votesLoading={votesLoading}
+          highlightName={highlightName}
+          setHighlightName={setHighlightName}
+          highlightedByCell={highlightedByCell}
+          setHighlightedByCell={setHighlightedByCell}
+          setSelectedCellKey={setSelectedCellKey}
+        />
       </main>
     );
   }

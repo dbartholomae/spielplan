@@ -21,6 +21,9 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
   if (!Array.isArray(selectedGameIds) || !Array.isArray(selectedTimeslotIds)) {
     return new Response(JSON.stringify({ error: 'Invalid selections' }), { status: 400 });
   }
+  if ((selectedGameIds?.length ?? 0) === 0 || (selectedTimeslotIds?.length ?? 0) === 0) {
+    return new Response(JSON.stringify({ error: 'At least one game and one timeslot required' }), { status: 400 });
+  }
   const key = series?.id ?? params.slug;
   const vote = await store.addVote({ seriesId: key, voterKey, voterName, selectedGameIds, selectedTimeslotIds });
   return new Response(JSON.stringify(vote), { headers: { 'content-type': 'application/json' }, status: 201 });
