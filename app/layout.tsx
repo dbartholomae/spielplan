@@ -1,5 +1,6 @@
 import Footer from "../components/Footer";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata = {
   title: "Spielplan",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
