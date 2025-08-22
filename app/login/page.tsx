@@ -62,20 +62,28 @@ export default function LoginPage() {
           {userId && (
             <div className="badge" style={{ marginBottom: 12 }}>You are signed in.</div>
           )}
-          <label className="small">Email</label>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder={t('auth.emailPlaceholder')}
-              className="input"
-              style={{ maxWidth: 280 }}
-            />
-            <button onClick={sendMagicLink} disabled={sending || !email.trim()} className="btn btn-primary">
-              {t('auth.sendMagicLink')}
-            </button>
-          </div>
+          <form
+            onSubmit={async (e) => { e.preventDefault(); await sendMagicLink(); }}
+          >
+            <label className="small" htmlFor="email">Email</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder={t('auth.emailPlaceholder')}
+                className="input"
+                style={{ maxWidth: 280 }}
+                required
+                autoComplete="email"
+              />
+              <button type="submit" disabled={sending || !email.trim()} className="btn btn-primary" aria-busy={sending}>
+                {sending ? '⏳ ' + t('auth.sendMagicLink') : t('auth.sendMagicLink')}
+              </button>
+            </div>
+          </form>
           {info && <div className="small" style={{ color: 'var(--muted)', marginTop: 8 }}>{info}</div>}
           {err && <div className="small" style={{ color: 'crimson', marginTop: 8 }}>{err}</div>}
         </section>

@@ -95,7 +95,7 @@ export default function PublicView(props: PublicViewProps) {
         </ul>
       </section>
 
-      <div className="flex" style={{ gap: 12, alignItems: 'center' }}>
+      <form className="flex" style={{ gap: 12, alignItems: 'center' }} onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <input
           value={voterName}
           onChange={e => setVoterName(e.target.value)}
@@ -104,13 +104,14 @@ export default function PublicView(props: PublicViewProps) {
           className="input"
         />
         <button
+          type="submit"
           disabled={submitting || !voterName || voterName.trim() === ''}
-          onClick={submit}
           className="btn btn-primary"
+          aria-busy={submitting}
         >
           {submitting ? '⏳ ' + t('public.saving') : t('public.saveAvailability')}
         </button>
-      </div>
+      </form>
 
       <div className="card">
         {t('public.shareLink')} <code className="badge" style={{ marginLeft: 8 }}>{typeof window !== 'undefined' ? window.location.href : ''}</code>

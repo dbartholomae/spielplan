@@ -182,7 +182,7 @@ export default function CreateSeriesPage() {
           }
           <div style={{display:'flex',justifyContent:'space-between',marginTop:16}}>
             <button className="btn" onClick={()=>setStep(2)}>{t('create.previous')}</button>
-            <button disabled={creating || games.length===0 || timeslots.length===0} onClick={createSeries} className="btn btn-primary">{creating? '⏳ '+t('create.creating') : t('create.createSeries')}</button>
+            <button disabled={creating || games.length===0 || timeslots.length===0} onClick={createSeries} className="btn btn-primary" aria-busy={creating}>{creating? '⏳ '+t('create.creating') : t('create.createSeries')}</button>
           </div>
         </section>
       )}
