@@ -1,6 +1,7 @@
 'use client';
 
 import ParticipantList from './ParticipantList';
+import type { Dispatch, SetStateAction } from 'react';
 
 // Types are structural to avoid cross-file coupling
 export type OwnerViewProps = {
@@ -27,9 +28,9 @@ export type OwnerViewProps = {
   selectedCellKey: string | null;
   highlightName: string | null;
   highlightedByCell: Set<string> | null;
-  setHighlightName: (name: string | null) => void;
-  setHighlightedByCell: (names: Set<string> | null) => void;
-  setSelectedCellKey: (key: string | null) => void;
+  setHighlightName: Dispatch<SetStateAction<string | null>>;
+  setHighlightedByCell: Dispatch<SetStateAction<Set<string> | null>>;
+  setSelectedCellKey: Dispatch<SetStateAction<string | null>>;
   heatBg: (count: number) => string | undefined;
   formatIso: (iso?: string) => string;
 };
