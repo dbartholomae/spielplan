@@ -15,12 +15,17 @@ A playful Doodle‑like scheduler to find days and times to play board games. Cr
 
    pnpm install
 
-2. (Optional) Create a `.env.local` file to enable Supabase auth:
+2. (Optional) Create a `.env.local` file to enable Supabase auth and email sending (Resend):
 
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-   If not set, the app will run in guest mode.
+   # Resend API key (used to email the series owner when a vote is submitted)
+   RESEND_API_KEY=re_...
+   # Optional: set a custom verified sender (defaults to onboarding@resend.dev)
+   RESEND_FROM=noreply@yourdomain.com
+
+   If not set, the app will run in guest mode and skip emails.
 
 3. Run the development server:
 
@@ -61,3 +66,4 @@ After this, restart the dev server and the API will read/write to Supabase.
 ## Notes
 - Replace the in‑memory store with Supabase for persistence. A minimal schema would include tables for series, games, timeslots, and votes.
 - The app directory uses Next.js 14 route handlers and client components for the UI.
+- Vercel Analytics is enabled via @vercel/analytics. It automatically collects traffic analytics on Vercel deployments; in local dev it remains inactive.
